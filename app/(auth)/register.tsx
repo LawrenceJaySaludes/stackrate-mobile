@@ -6,110 +6,166 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../src/lib/supabase";
+import { colors, spacing } from "../../src/theme";
 
 export default function RegisterScreen() {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
     if (!email || !password) {
       Alert.alert("Error", "Please enter email and password");
       return;
     }
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      Alert.alert("Register Failed", error.message);
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
 
-    Alert.alert("Success", "Account created. Please check Supabase Auth users.");
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      Alert.alert("Registration Failed", error.message);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    Alert.alert(
+      "Account Created",
+      "Now let's set up your profile.",
+      [{ text: "Continue", onPress: () => router.replace("/(auth)/onboarding") }]
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Start tracking your tech skills</Text>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <View style={styles.content}>
+        <Text style={styles.brand}>StackRate</Text>
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Start tracking your tech skills</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#94A3B8"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor={colors.textMuted}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoCorrect={false}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#94A3B8"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Password (min 6 characters)"
+          placeholderTextColor={colors.textMuted}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleRegister}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Create Account</Text>
+          )}
+        </TouchableOpacity>
 
-      <Link href="/(auth)/login" style={styles.link}>
-        Already have an account? Login
-      </Link>
-    </View>
+        <Link href="/(auth)/login" style={styles.link}>
+          <Text style={styles.linkText}>
+            Already have an account? <Text style={styles.linkHighlight}>Login</Text>
+          </Text>
+        </Link>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: colors.bg,
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
-    padding: 24,
+    padding: spacing.xxl,
+  },
+  brand: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.accent,
+    textTransform: "uppercase",
+    letterSpacing: 2,
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-    textAlign: "center",
+    fontWeight: "800",
+    color: colors.textPrimary,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: "#CBD5E1",
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 32,
+    fontSize: 15,
+    color: colors.textSecondary,
+    marginTop: 6,
+    marginBottom: spacing.xxxl,
   },
   input: {
-    backgroundColor: "#1E293B",
-    color: "#FFFFFF",
+    backgroundColor: colors.card,
+    color: colors.textPrimary,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 14,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.cardBorder,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: "#6366F1",
-    padding: 16,
+    backgroundColor: colors.accent,
+    padding: spacing.lg,
     borderRadius: 12,
-    marginTop: 8,
+    marginTop: 6,
+    alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontWeight: "bold",
+    color: colors.white,
+    fontWeight: "700",
     fontSize: 16,
   },
   link: {
-    color: "#A5B4FC",
-    textAlign: "center",
-    marginTop: 20,
+    marginTop: spacing.xl,
+    alignItems: "center",
+  },
+  linkText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  linkHighlight: {
+    color: "#818CF8",
+    fontWeight: "600",
   },
 });
