@@ -18,6 +18,7 @@ import { Profile } from "../../src/types/profile";
 import { updateProfile } from "../../src/services/profileService";
 import { Select } from "../../src/components/Select";
 import { colors, spacing, common } from "../../src/theme";
+import StackRateLogo from "../../src/components/StackRateLogo";
 
 const ROLE_OPTIONS = [
   { label: "Student", value: "Student" },
@@ -111,6 +112,10 @@ export default function ProfileScreen() {
         contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.lg }]}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={styles.logoWrap}>
+          <StackRateLogo size={56} />
+        </View>
+
         <Text style={common.headerTitle}>Profile</Text>
         <Text style={common.headerSubtitle}>Edit your personal information</Text>
 
@@ -151,6 +156,15 @@ export default function ProfileScreen() {
             <Text style={styles.saveButtonText}>Save Changes</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            By using this app you agree to our Terms of Service and Privacy Policy.
+          </Text>
+          <Text style={styles.copyright}>
+            © {new Date().getFullYear()} Lawrence Saludes. All Rights Reserved.
+          </Text>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -160,6 +174,29 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxxl,
+  },
+  logoWrap: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  footer: {
+    marginTop: spacing.xxxl,
+    paddingTop: spacing.xxl,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+    alignItems: "center",
+  },
+  footerText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: spacing.sm,
+  },
+  copyright: {
+    color: colors.textMuted,
+    fontSize: 11,
+    textAlign: "center",
   },
   saveButton: {
     backgroundColor: colors.accent,

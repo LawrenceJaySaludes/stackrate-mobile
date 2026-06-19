@@ -5,6 +5,7 @@ import { colors, spacing } from "../../src/theme";
 const tabs = [
   { name: "library", label: "Library", icon: "▣" },
   { name: "assessment", label: "Assess", icon: "◎" },
+  { name: "roles", label: "Roles", icon: "⚡" },
   { name: "dashboard", label: "Dashboard", icon: "◈" },
   { name: "profile", label: "Profile", icon: "○" },
 ];

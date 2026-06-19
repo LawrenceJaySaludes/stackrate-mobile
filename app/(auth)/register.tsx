@@ -14,6 +14,7 @@ import { Link, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../../src/lib/supabase";
 import { colors, spacing } from "../../src/theme";
+import StackRateLogo from "../../src/components/StackRateLogo";
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
@@ -54,6 +55,7 @@ export default function RegisterScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.content}>
+        <StackRateLogo />
         <Text style={styles.brand}>StackRate</Text>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Start tracking your tech skills</Text>
@@ -117,19 +119,23 @@ const styles = StyleSheet.create({
     color: colors.accent,
     textTransform: "uppercase",
     letterSpacing: 2,
+    marginTop: spacing.lg,
     marginBottom: spacing.sm,
+    textAlign: "center",
   },
   title: {
     fontSize: 32,
     fontWeight: "800",
     color: colors.textPrimary,
     letterSpacing: -0.5,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 15,
     color: colors.textSecondary,
     marginTop: 6,
     marginBottom: spacing.xxxl,
+    textAlign: "center",
   },
   input: {
     backgroundColor: colors.card,

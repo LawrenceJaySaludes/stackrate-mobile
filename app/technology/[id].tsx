@@ -6,10 +6,16 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTechnologyById } from "../../src/services/technologyService";
+import { supabase } from "../../src/lib/supabase";
+import {
+  getTechnologyById,
+  getNotes,
+  saveNotes,
+} from "../../src/services/technologyService";
 import { TechnologyWithCategory } from "../../src/types/technology";
 import { colors, spacing, common } from "../../src/theme";
 
@@ -28,6 +34,11 @@ export default function TechnologyDetailScreen() {
   const [tech, setTech] = useState<TechnologyWithCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notes, setNotes] = useState("");
+  const [notesLoading, setNotesLoading] = useState(true);
+  const [notesSaving, setNotesSaving] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [notesSaved, setNotesSaved] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -45,6 +56,36 @@ export default function TechnologyDetailScreen() {
     }
 
     setLoading(false);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: notesData, error: notesErr } = await getNotes(user.id, Number(id));
+      if (!notesErr && notesData) {
+        setNotes(notesData.notes);
+      }
+    }
+
+    setNotesLoading(false);
+  }
+
+  async function handleSaveNotes() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !id) return;
+
+    setNotesSaving(true);
+    setNotesError(null);
+    setNotesSaved(false);
+
+    const { error } = await saveNotes(user.id, Number(id), notes);
+
+    if (error) {
+      setNotesError(error.message);
+    } else {
+      setNotesSaved(true);
+      setTimeout(() => setNotesSaved(false), 2000);
+    }
+
+    setNotesSaving(false);
   }
 
   if (loading) {
@@ -111,6 +152,52 @@ export default function TechnologyDetailScreen() {
             <Text style={styles.infoValue}>{tech.description}</Text>
           </View>
         ) : null}
+
+        <View style={[common.card, styles.notesCard]}>
+          <Text style={styles.infoLabel}>Notes</Text>
+
+          {notesLoading ? (
+            <ActivityIndicator size="small" color={colors.accent} style={styles.notesLoader} />
+          ) : (
+            <>
+              <TextInput
+                style={styles.notesInput}
+                value={notes}
+                onChangeText={(text) => {
+                  setNotes(text);
+                  if (notesSaved) setNotesSaved(false);
+                }}
+                placeholder="Write your notes about this technology..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                textAlignVertical="top"
+              />
+
+              <View style={styles.notesFooter}>
+                {notesError ? (
+                  <Text style={styles.notesErrorText}>{notesError}</Text>
+                ) : notesSaved ? (
+                  <Text style={styles.notesSavedText}>Notes saved</Text>
+                ) : (
+                  <View style={{ flex: 1 }} />
+                )}
+
+                <TouchableOpacity
+                  style={[styles.saveButton, notesSaving && styles.saveButtonDisabled]}
+                  onPress={handleSaveNotes}
+                  disabled={notesSaving}
+                  activeOpacity={0.8}
+                >
+                  {notesSaving ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -186,5 +273,58 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: colors.textPrimary,
     fontWeight: "600",
+  },
+  notesCard: {
+    marginTop: spacing.xl,
+    padding: spacing.lg,
+  },
+  notesLoader: {
+    paddingVertical: spacing.xxl,
+  },
+  notesInput: {
+    color: colors.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
+    minHeight: 120,
+    backgroundColor: colors.bg,
+    borderRadius: 10,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    marginTop: spacing.sm,
+  },
+  notesFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.md,
+    minHeight: 36,
+  },
+  notesErrorText: {
+    color: colors.danger,
+    fontSize: 13,
+    flex: 1,
+  },
+  notesSavedText: {
+    color: colors.success,
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+  },
+  saveButton: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    minWidth: 70,
+    alignItems: "center",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: colors.white,
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
